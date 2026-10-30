@@ -26,8 +26,8 @@ export async function getEventById(req, res) {
 
 export async function createEvent(req, res) {
     try {
-        const { title, description, date, location, participants } = req.body
-        const newEvent = new Event({ title, description, date, location, participants })
+        const { title, description, date, location, fromDate, toDate, participants } = req.body
+        const newEvent = new Event({ title, description, date, location, fromDate, toDate, participants })
         const savedEvent = await newEvent.save()
         res.status(201).json(savedEvent)
     }
@@ -39,10 +39,10 @@ export async function createEvent(req, res) {
 
 export async function updateEvent(req, res) {
     try {
-        const { title, description, date, location, participants } = req.body
+        const { title, description, date, location, fromDate, toDate, participants } = req.body
         const updatedEvent = await Event.findByIdAndUpdate(
             req.params.id,
-            { title, description, date, location, participants }
+            { title, description, date, location, fromDate, toDate, participants }
         )
         if (!updatedEvent) return res.status(404).json({ message: "event not found." })
         res.status(200).json({ message: "event updated successfully." })

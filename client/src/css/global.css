@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@theme {
+    --font-display: "Merriweather", sans-serif;
+    --color-pale: #E8D9C4;
+    --color-gold: #785D32;
+    --color-rough: #3E160C;
+    --color-off-navy: #050A30;
+}
+
 @layer base {
 
     button,
@@ -8,6 +16,7 @@
     }
 
     body {
-        @apply overflow-x-hidden
+        @apply font-display overflow-x-hidden bg-pale
     }
+    
 }

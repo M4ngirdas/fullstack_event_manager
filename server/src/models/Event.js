@@ -12,11 +12,25 @@ const eventSchema = new mongoose.Schema(
         },
         date: {
             type: Date,
-            required: true
+            // required: function () {
+            //     return !this.fromDate && !this.toDate
+            // }
+        },
+        fromDate: {
+            type: Date,
+            // required: function () {
+            //     return !this.date
+            // }
+        },
+        toDate: {
+            type: Date,
+            // required: function () {
+            //     return !this.date
+            // }
         },
         location: {
             type: String,
-            required: true
+            // required: true
         }
     },
     { timestamps: true }

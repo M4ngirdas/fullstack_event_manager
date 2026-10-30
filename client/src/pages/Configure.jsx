@@ -3,7 +3,6 @@ import { useEffect, useState } from "react"
 import { useParams } from "react-router"
 import { LuArrowLeft, LuLoader } from "react-icons/lu"
 import { useNavigate } from "react-router"
-import { formatDate } from "../lib/utils.js"
 
 import axiosInstance from "../lib/axios.js"
 
@@ -11,6 +10,8 @@ export default function Configure() {
 
     const [selectedEvent, setSelectedEvent] = useState(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [isSaving, setIsSaving] = useState(false)
+    const [isChecked, setIsChecked] = useState(false)
 
     const { id } = useParams()
     const navigate = useNavigate()
@@ -18,8 +19,10 @@ export default function Configure() {
     useEffect(() => {
         async function fetchEvent() {
             try {
+                setIsSaving(true)
                 const response = await axiosInstance.get(`/events/${id}`)
-                setSelectedEvent({ ...response.data, date: response.data.date.slice(0, 10) })
+                setSelectedEvent({ ...response.data, date: response.data.date?.slice(0, 10), fromDate: response.data.fromDate?.slice(0, 10), toDate: response.data.toDate?.slice(0, 10) })
+                setIsChecked(response.data.fromDate && response.data.toDate ? true : false)
             }
             catch (error) {
                 console.error("failed to fetch an event", error)
@@ -27,12 +30,11 @@ export default function Configure() {
             }
             finally {
                 setIsLoading(false)
+                setIsSaving(false)
             }
         }
         fetchEvent()
     }, [id])
-
-    console.log(selectedEvent)
 
     async function saveChanges(ev) {
         ev.preventDefault()
@@ -42,11 +44,14 @@ export default function Configure() {
         const description = formData.get("description")
         const location = formData.get("location")
         const date = formData.get("date")
+        const fromDate = formData.get("fromDate")
+        const toDate = formData.get("toDate")
 
         try {
+            setIsSaving(true)
             await axiosInstance.put(
                 `/events/${id}`,
-                { title, description, location, date }
+                { title, description, location, date, fromDate, toDate }
             )
             navigate("/")
             window.alert("event updated successfully.")
@@ -55,7 +60,12 @@ export default function Configure() {
             console.error("failed to save changes.", error)
             window.alert("failed to save changes.")
         }
+        finally {
+            setIsSaving(false)
+        }
     }
+
+    console.log(selectedEvent)
 
     if (isLoading) {
         return (
@@ -63,32 +73,120 @@ export default function Configure() {
         )
     }
 
+    console.log(selectedEvent)
+
     return (
         <main className="p-12">
-            <button onClick={() => navigate("/")} className="flex items-center gap-2 p-4 hover:bg-gray-200"><LuArrowLeft />Go back</button>
+            <button
+                onClick={() => navigate("/")}
+                className="flex items-center gap-2 p-4 hover:bg-gray-200"
+            >
+                <LuArrowLeft />
+                Go back
+            </button>
             <h1 className="text-4xl font-bold">Event configuration</h1>
             <form onSubmit={saveChanges} className="grid gap-4 mt-16 w-1/2">
                 <div className="flex">
                     <label htmlFor="title" className="w-30">Title</label>
-                    <input id="title" name="title" defaultValue={selectedEvent.title} type="text" className="border px-6 py-2 w-full" />
+                    <input
+                        id="title"
+                        name="title"
+                        defaultValue={selectedEvent.title}
+                        type="text"
+                        className="border px-6 py-2 w-full"
+                    />
                 </div>
 
                 <div className="flex">
                     <label htmlFor="description" className="w-30">Description</label>
-                    <input id="description" name="description" defaultValue={selectedEvent.description ? selectedEvent.description : null} type="text" className="border px-6 py-2 w-full" />
+                    <input
+                        id="description"
+                        name="description"
+                        defaultValue={
+                            selectedEvent.description ? selectedEvent.description : null
+                        }
+                        type="text"
+                        className="border px-6 py-2 w-full"
+                    />
                 </div>
 
                 <div className="flex">
-                    <label htmlFor="location" className="w-30">Location</label>
-                    <input id="location" name="location" defaultValue={selectedEvent.location} type="text" className="border px-6 py-2 w-full" />
+                    <label htmlFor="location" className="w-30">
+                        Location
+                    </label>
+                    <input
+                        id="location"
+                        name="location"
+                        defaultValue={selectedEvent.location}
+                        type="text"
+                        className="border px-6 py-2 w-full"
+                    />
+                </div>
+                {!isChecked || selectedEvent.date ? (
+                    <div className="flex">
+                        <label htmlFor="date" className="w-30">Date</label>
+                        <input
+                            id="date"
+                            name="date"
+                            defaultValue={selectedEvent.date}
+                            type="date"
+                            className="border px-6 py-2 w-full"
+                        />
+                    </div>
+                ) : null}
+
+                {isChecked || (selectedEvent.fromDate && isChecked) ? (
+                    <div className="flex">
+                        <label htmlFor="fromDate" className="w-30">From (date)</label>
+                        <input
+                            id="fromDate"
+                            name="fromDate"
+                            defaultValue={selectedEvent.fromDate}
+                            type="date"
+                            className="border px-6 py-2 w-full"
+                        />
+                    </div>
+                ) : null}
+
+                {isChecked || (selectedEvent.toDate && isChecked) ? (
+                    <div className="flex">
+                        <label htmlFor="toDate" className="w-30">To (date)</label>
+                        <input
+                            id="toDate"
+                            name="toDate"
+                            defaultValue={selectedEvent.toDate}
+                            type="date"
+                            className="border px-6 py-2 w-full"
+                        />
+                    </div>
+                ) : null}
+
+                <div className="flex items-center gap-4">
+                    <input
+                        onChange={(ev) => setIsChecked(ev.target.checked)}
+                        checked={isChecked}
+                        id="checkbox"
+                        type="checkbox"
+                        className="size-4 cursor-pointer"
+                    />
+                    <label htmlFor="checkbox">Event lasts more than one day</label>
                 </div>
 
-                <div className="flex">
-                    <label htmlFor="date" className="w-30">Date</label>
-                    <input id="date" name="date" defaultValue={selectedEvent.date} type="date" className="border px-6 py-2 w-full" />
-                </div>
-                <button type="submit" className="px-6 py-2 uppercase bg-cyan-950 text-white">Save changes</button>
+                <button
+                    type="submit"
+                    disabled={isSaving}
+                    className={`${isSaving ? "cursor-no-drop opacity-50" : ""} px-6 py-2 uppercase bg-cyan-950 text-white`}
+                >
+                    {isSaving ? (
+                        <span className="flex justify-center items-center gap-2">
+                            <LuLoader className="animate-spin size-4" />
+                            Saving...
+                        </span>
+                    ) : (
+                        "Save changes"
+                    )}
+                </button>
             </form>
         </main>
-    )
+    );
 }
